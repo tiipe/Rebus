@@ -379,6 +379,10 @@
       <Project>{2178D256-94D6-4443-B23B-53F723184441}</Project>
       <Name>Rebus.Castle.Windsor</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Rebus.DynamicJson\Rebus.DynamicJson.csproj">
+      <Project>{4d6eb672-b612-490c-abc2-90643df056d4}</Project>
+      <Name>Rebus.DynamicJson</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Rebus.HttpGateway\Rebus.HttpGateway.csproj">
       <Project>{3E817332-6161-46A1-8597-0E54BAD23DE0}</Project>
       <Name>Rebus.HttpGateway</Name>

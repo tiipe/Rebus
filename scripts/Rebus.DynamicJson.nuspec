@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<package>
+  <metadata>
+    <id>Rebus.DynamicJson</id>
+    <version>0.0.1</version>
+    <title>Rebus.DynamicJson</title>
+    <authors>mookid8000</authors>
+    <owners>mookid8000</owners>
+    <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
+    <projectUrl>http://mookid.dk/oncode/rebus</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Provides a special JSON serializer that delivers incoming messages in the form of dynamic JSON objects</description>
+    <copyright>Copyright 2013</copyright>
+    <tags>rebus json dynamic postels-law</tags>
+    <iconUrl>https://github.com/mookid8000/Rebus/raw/master/artwork/logo200x200-transparent.png</iconUrl>
+    <dependencies>
+      <dependency id="Rebus" version="0.0.1" />
+      <dependency id="Newtonsoft.Json" version="5.0.6" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="..\deploy\**\Rebus.DynamicJson.dll" target="lib" />
+  </files>
+</package>

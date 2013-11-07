@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using NUnit.Framework;
+using Rebus.DynamicJson;
 using Rebus.Messages;
 using Rebus.Serialization.Binary;
 using Rebus.Serialization.Json;
@@ -11,6 +12,7 @@ using Shouldly;
 
 namespace Rebus.Tests.Contracts.Serialization
 {
+    [TestFixture(typeof(DynamicJsonSerializer))]
     [TestFixture(typeof(JsonMessageSerializer))]
     [TestFixture(typeof(BinaryMessageSerializer))]
     public class TestSerialization<TSerializer> : FixtureBase where TSerializer : ISerializeMessages, new()

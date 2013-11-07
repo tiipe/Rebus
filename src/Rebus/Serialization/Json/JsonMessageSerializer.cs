@@ -43,8 +43,8 @@ namespace Rebus.Serialization.Json
             new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
         
         readonly CultureInfo serializationCulture = CultureInfo.InvariantCulture;
-        
-        readonly NonDefaultSerializationBinder binder;
+
+        readonly NonDefaultSerializationBinder binder = new NonDefaultSerializationBinder();
         
         Encoding customEncoding;
 
