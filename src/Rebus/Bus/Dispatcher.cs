@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using Ponder;
 using Rebus.Extensions;
 using Rebus.Logging;
@@ -103,8 +104,9 @@ namespace Rebus.Bus
                     log.Debug("Dispatching {0} to {1}", message, handler);
 
                     var handlerType = handler.GetType();
+                    var typesToDispatchToThisHandler = GetTypesToDispatchToThisHandler(typesToDispatch, handlerType);
 
-                    foreach (var typeToDispatch in GetTypesToDispatchToThisHandler(typesToDispatch, handlerType))
+                    foreach (var typeToDispatch in typesToDispatchToThisHandler)
                     {
                         try
                         {
@@ -193,7 +195,9 @@ namespace Rebus.Bus
         IEnumerable<Type> GetTypesToDispatchToThisHandler(IEnumerable<Type> typesToDispatch, Type handlerType)
         {
             var interfaces = handlerType.GetInterfaces()
-                .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IHandleMessages<>))
+                .Where(i => i.IsGenericType
+                            && (i.GetGenericTypeDefinition() == typeof (IHandleMessages<>)
+                                || i.GetGenericTypeDefinition() == typeof (IHandleMessagesAsync<>)))
                 .Select(i => i.GetGenericArguments()[0]);
 
             return interfaces.Intersect(typesToDispatch).ToArray();
@@ -242,7 +246,7 @@ This most likely indicates that you have configured this Rebus service to use an
         ///   Private dispatcher method that gets invoked only via reflection.
         /// </summary>
         // ReSharper disable UnusedMember.Local
-        void DispatchToHandler<TMessage>(TMessage message, IHandleMessages<TMessage> handler)
+        void DispatchToHandler<TMessage>(TMessage message, IHandleMessages handler)
         {
             var saga = handler as Saga;
             if (saga != null)
@@ -275,15 +279,30 @@ This most likely indicates that you have configured this Rebus service to use an
 
                 using (new SagaContext(sagaData.Id))
                 {
-                    handler.Handle(message);
+                    DoDispatch(message, handler);
                     PerformSaveActions(saga, sagaData);
                 }
 
                 return;
             }
 
-            handler.Handle(message);
+            DoDispatch(message, handler);
         }
+
+        static void DoDispatch<TMessage>(TMessage message, IHandleMessages handler)
+        {
+            var ordinaryHandler = handler as IHandleMessages<TMessage>;
+            if (ordinaryHandler != null)
+            {
+                ordinaryHandler.Handle(message);
+            }
+            var asyncHandler = handler as IHandleMessagesAsync<TMessage>;
+            if (asyncHandler != null)
+            {
+                Task.WaitAll(asyncHandler.Handle(message));
+            }
+        }
+
         // ReSharper restore UnusedMember.Local
 
         void PerformSaveActions(Saga saga, ISagaData sagaData)
@@ -327,7 +346,7 @@ This most likely indicates that you have configured this Rebus service to use an
             return paths;
         }
 
-        ISagaData CreateSagaData<TMessage>(IHandleMessages<TMessage> handler)
+        ISagaData CreateSagaData(IHandleMessages handler)
         {
             var dataProperty = handler.GetType().GetProperty(sagaDataPropertyName);
             var sagaData = (ISagaData)Activator.CreateInstance(dataProperty.PropertyType);

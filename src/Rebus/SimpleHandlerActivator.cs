@@ -47,7 +47,9 @@ namespace Rebus
         void InnerRegister(Type handlerType, Func<object> factoryMethod)
         {
             var handlerInterfaces = handlerType.GetInterfaces()
-                .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof (IHandleMessages<>));
+                .Where(i => i.IsGenericType
+                            && (i.GetGenericTypeDefinition() == typeof (IHandleMessages<>)
+                                || i.GetGenericTypeDefinition() == typeof (IHandleMessagesAsync<>)));
 
             foreach (var handlerInterface in handlerInterfaces)
             {
@@ -61,14 +63,23 @@ namespace Rebus
         /// <summary>
         /// Gets all available handlers that can be cast to <see cref="IHandleMessages{TMessage}"/>
         /// </summary>
-        public IEnumerable<IHandleMessages<T>> GetHandlerInstancesFor<T>()
+        public IEnumerable<IHandleMessages> GetHandlerInstancesFor<T>()
         {
-            if (!activators.ContainsKey(typeof(IHandleMessages<T>)))
-                return new IHandleMessages<T>[0];
+            var handlers = new List<IHandleMessages>();
 
-            return activators[typeof(IHandleMessages<T>)]
-                .Select(f => f()).Cast<IHandleMessages<T>>()
-                .ToArray();
+            List<Func<object>> activatorsForThisHandler;
+
+            if (activators.TryGetValue(typeof (IHandleMessages<T>), out activatorsForThisHandler))
+            {
+                handlers.AddRange(activatorsForThisHandler.Select(activator => (IHandleMessages) activator()));
+            }
+
+            if (activators.TryGetValue(typeof (IHandleMessagesAsync<T>), out activatorsForThisHandler))
+            {
+                handlers.AddRange(activatorsForThisHandler.Select(activator => (IHandleMessages)activator()));
+            }
+            
+            return handlers;
         }
 
         /// <summary>
