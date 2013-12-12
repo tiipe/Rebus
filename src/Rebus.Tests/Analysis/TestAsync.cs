@@ -37,6 +37,16 @@ namespace Rebus.Tests.Analysis
             messageHasBeenProcessedEvent.WaitUntilSetOrDie(50.Seconds());
         }
 
+        [Test]
+        public void CanDoItWithVoid()
+        {
+            adapter.Register(() => new HasAsyncVoidHandleMethod(messageHasBeenProcessedEvent));
+
+            adapter.Bus.SendLocal(new SomeMessage {Delay = TimeSpan.FromSeconds(1)});
+
+            messageHasBeenProcessedEvent.WaitUntilSetOrDie(50.Seconds());
+        }
+
     }
 
     public class HasAsyncHandleMethod : IHandleMessagesAsync<SomeMessage>
@@ -54,6 +64,35 @@ namespace Rebus.Tests.Analysis
 
             await Task.Delay((int) message.Delay.TotalMilliseconds);
             
+            Console.WriteLine("Landing on {0}", Thread.CurrentThread.Name);
+
+            await Task.Delay((int) message.Delay.TotalMilliseconds);
+            
+            Console.WriteLine("Ending on {0}", Thread.CurrentThread.Name);
+
+            resetEvent.Set();
+        }
+    }
+
+    public class HasAsyncVoidHandleMethod : IHandleMessages<SomeMessage>
+    {
+        readonly ManualResetEvent resetEvent;
+
+        public HasAsyncVoidHandleMethod(ManualResetEvent resetEvent)
+        {
+            this.resetEvent = resetEvent;
+        }
+
+        public async void Handle(SomeMessage message)
+        {
+            Console.WriteLine("Starting on {0}", Thread.CurrentThread.Name);
+
+            await Task.Delay((int) message.Delay.TotalMilliseconds);
+
+            Console.WriteLine("Landing on {0}", Thread.CurrentThread.Name);
+
+            await Task.Delay((int)message.Delay.TotalMilliseconds);
+
             Console.WriteLine("Ending on {0}", Thread.CurrentThread.Name);
 
             resetEvent.Set();
